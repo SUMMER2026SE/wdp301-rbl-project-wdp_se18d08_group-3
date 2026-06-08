@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs'); // 🌟 Đã thêm thư viện băm mật khẩu
 
 const userSchema = new mongoose.Schema({
     name: { type: String, required: [true, 'Vui lòng nhập họ và tên'], trim: true },
@@ -46,6 +47,27 @@ userSchema.methods.getResetPasswordToken = function() {
     this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
     this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
     return resetToken;
+};
+
+// ==========================================
+// 1. BĂM MẬT KHẨU TRƯỚC KHI LƯU VÀO DB
+// ==========================================
+userSchema.pre('save', async function(next) {
+    // Nếu password không bị sửa đổi thì bỏ qua (chạy tiếp)
+    if (!this.isModified('password')) {
+        return next();
+    }
+    // Băm mật khẩu với độ khó là 10 (salt)
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+});
+
+// ==========================================
+// 2. HÀM SO SÁNH MẬT KHẨU KHI ĐĂNG NHẬP
+// ==========================================
+userSchema.methods.matchPassword = async function(enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
 };
 
 userSchema.index({ role: 1 });
