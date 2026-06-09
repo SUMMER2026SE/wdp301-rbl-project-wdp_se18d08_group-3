@@ -9,6 +9,9 @@ const userSchema = new mongoose.Schema({
     role: { type: String, enum: ['student', 'staff', 'vendor', 'vendor_owner', 'admin'], default: 'student' },
     password: { type: String, select: false },
     avatar: { type: String, default: '' },
+    
+    // 🌟 ĐÃ THÊM: Trường lưu ID của Google để tránh lỗi khi đăng nhập bằng Google
+    googleId: { type: String, default: '' },
 
     // 🌟 THÊM TRƯỜNG DUYỆT TÀI KHOẢN (ĐĂNG KÝ QUẦY)
     isApproved: { 
@@ -50,17 +53,16 @@ userSchema.methods.getResetPasswordToken = function() {
 };
 
 // ==========================================
-// 1. BĂM MẬT KHẨU TRƯỚC KHI LƯU VÀO DB
+// 1. BĂM MẬT KHẨU TRƯỚC KHI LƯU VÀO DB (BẢN FIX TRIỆT ĐỂ LỖI NEXT)
 // ==========================================
-userSchema.pre('save', async function(next) {
-    // Nếu password không bị sửa đổi thì bỏ qua (chạy tiếp)
-    if (!this.isModified('password')) {
-        return next();
+userSchema.pre('save', async function() {
+    // 🌟 ĐÃ SỬA: Bỏ "next", dùng return thẳng. Nếu không có password hoặc pass không bị thay đổi thì bỏ qua
+    if (!this.password || !this.isModified('password')) {
+        return; 
     }
     // Băm mật khẩu với độ khó là 10 (salt)
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next();
 });
 
 // ==========================================
