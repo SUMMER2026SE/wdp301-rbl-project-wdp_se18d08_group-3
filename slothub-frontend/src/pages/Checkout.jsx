@@ -236,47 +236,85 @@ const Checkout = () => {
 
           {/* PHƯƠNG THỨC THANH TOÁN */}
           <div className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-xl shadow-gray-200/40 border border-gray-100 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
-            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2 mb-5">
+            <h2 className="text-xl font-black text-gray-900 flex items-center gap-2 mb-6">
               <CreditCard className="text-[#F27124]" size={24} /> Phương thức thanh toán
             </h2>
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Ví SlotHub */}
+            
+            <div className="flex flex-col sm:flex-row gap-5">
+              
+              {/* === VÍ SLOTHUB === */}
               <div 
                 onClick={() => setPaymentMethod('wallet')}
-                className={`flex-1 p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-center ${
+                className={`group flex-1 p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300 flex flex-col justify-center relative overflow-hidden ${
                   paymentMethod === 'wallet' 
-                  ? 'border-[#F27124] bg-orange-50 shadow-md scale-[1.02]' 
-                  : 'border-gray-100 bg-gray-50 hover:border-orange-200'
+                  ? 'border-[#F27124] bg-gradient-to-br from-orange-50 to-orange-100/40 shadow-lg shadow-orange-500/10 scale-[1.02]' 
+                  : 'border-gray-100 bg-gray-50 hover:border-orange-200 hover:bg-orange-50/50'
                 }`}
               >
-                <div className="flex items-center gap-3 font-black mb-2 text-gray-900 text-lg">
-                  <div className={`p-2 rounded-lg ${paymentMethod === 'wallet' ? 'bg-[#F27124] text-white' : 'bg-gray-200 text-gray-500'}`}>
-                    <Wallet size={20} />
+                <div className="flex items-start gap-4 mb-3 relative z-10">
+                  <div className={`p-3.5 rounded-2xl transition-all duration-300 ${
+                    paymentMethod === 'wallet' 
+                    ? 'bg-gradient-to-br from-[#F27124] to-[#D95F1B] text-white shadow-md shadow-orange-500/30' 
+                    : 'bg-white text-gray-400 border border-gray-200 group-hover:text-[#F27124] group-hover:shadow-sm'
+                  }`}>
+                    <Wallet size={24} />
                   </div>
-                  Ví SlotHub
+                  <div className="flex flex-col pt-1">
+                    <span className={`font-black text-lg tracking-tight leading-none mb-1.5 transition-colors ${paymentMethod === 'wallet' ? 'text-[#F27124]' : 'text-gray-900'}`}>
+                      Ví SlotHub
+                    </span>
+                    <span className={`text-xs font-black px-2.5 py-1 rounded-lg w-fit transition-colors ${
+                      isEnoughBalance 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-600'
+                    }`}>
+                      Số dư: {balance?.toLocaleString()}đ
+                    </span>
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500 font-medium">
-                  Số dư: <span className={`font-black ${isEnoughBalance ? 'text-green-600' : 'text-red-500'}`}>{balance?.toLocaleString()}đ</span>
-                </p>
+                <p className="text-sm text-gray-500 font-medium relative z-10">Thanh toán 1 chạm, không cần chờ đợi</p>
               </div>
 
-              {/* VietQR / PayOS */}
+              {/* === VIETQR / PAYOS === */}
               <div 
                 onClick={() => setPaymentMethod('payos')}
-                className={`flex-1 p-5 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-center ${
+                className={`group flex-1 p-5 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300 flex flex-col justify-center relative overflow-hidden ${
                   paymentMethod === 'payos' 
-                  ? 'border-[#00B14F] bg-green-50 shadow-md scale-[1.02]' 
-                  : 'border-gray-100 bg-gray-50 hover:border-green-200'
+                  ? 'border-[#00B14F] bg-gradient-to-br from-green-50 to-emerald-100/40 shadow-lg shadow-green-500/10 scale-[1.02]' 
+                  : 'border-gray-100 bg-gray-50 hover:border-green-200 hover:bg-green-50/50'
                 }`}
               >
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={`p-2 rounded-lg ${paymentMethod === 'payos' ? 'bg-[#00B14F] text-white' : 'bg-gray-200 text-gray-500'}`}>
-                    <QrCode size={20} />
+                {/* Ánh sáng lấp lánh trang trí góc cho PayOS */}
+                {paymentMethod === 'payos' && (
+                  <div className="absolute -right-8 -top-8 w-32 h-32 bg-gradient-to-br from-[#00B14F]/20 to-transparent rounded-full blur-2xl"></div>
+                )}
+                
+                <div className="flex items-start gap-4 mb-3 relative z-10">
+                  <div className={`p-3.5 rounded-2xl transition-all duration-300 ${
+                    paymentMethod === 'payos' 
+                    ? 'bg-gradient-to-br from-[#00B14F] to-[#008039] text-white shadow-md shadow-green-500/30' 
+                    : 'bg-white text-gray-400 border border-gray-200 group-hover:text-[#00B14F] group-hover:shadow-sm'
+                  }`}>
+                    <QrCode size={24} />
                   </div>
-                  <span className={`${paymentMethod === 'payos' ? 'text-[#00B14F]' : 'text-gray-900'} font-black text-lg tracking-wide`}>Mã VietQR</span>
+                  <div className="flex flex-col pt-1">
+                    <span className={`font-black text-lg tracking-tight leading-none mb-1.5 transition-colors ${paymentMethod === 'payos' ? 'text-[#00B14F]' : 'text-gray-900'}`}>
+                      Mã VietQR
+                    </span>
+                    {paymentMethod === 'payos' ? (
+                      <span className="text-[10px] uppercase font-black text-[#00B14F] bg-[#00B14F]/15 px-2.5 py-1 rounded-lg w-fit flex items-center gap-1.5">
+                        <Sparkles size={12} className="fill-[#00B14F]/50" /> Tự động duyệt
+                      </span>
+                    ) : (
+                      <span className="text-[10px] uppercase font-black text-gray-400 bg-gray-200/50 px-2.5 py-1 rounded-lg w-fit">
+                        Mọi ngân hàng
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-gray-500 font-medium">Quét mã bằng mọi app ngân hàng</p>
+                <p className="text-sm text-gray-500 font-medium relative z-10">Quét mã QR qua app ngân hàng, MoMo...</p>
               </div>
+
             </div>
           </div>
         </div>
