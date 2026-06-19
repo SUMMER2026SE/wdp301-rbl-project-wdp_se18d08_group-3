@@ -36,7 +36,8 @@ const orderSchema = new mongoose.Schema({
 
     paymentStatus: { 
         type: String, 
-        enum: ['Unpaid', 'Paid', 'Refunded'], 
+        // 🌟 FIX LỖI TẠI ĐÂY: Đã thêm 'Failed' để Mongoose cho phép lưu trạng thái khi khách hủy đơn PayOS
+        enum: ['Unpaid', 'Paid', 'Refunded', 'Failed'], 
         default: 'Unpaid' 
     },
     paymentMethod: { 
