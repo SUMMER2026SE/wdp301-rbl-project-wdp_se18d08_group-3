@@ -147,5 +147,4 @@ const VendorNotifications = ({ onGoOrders, onGoMenu }) => {
     </div>
   );
 };
-
 export default VendorNotifications;
