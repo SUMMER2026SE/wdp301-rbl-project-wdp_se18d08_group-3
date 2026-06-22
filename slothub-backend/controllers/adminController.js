@@ -280,6 +280,106 @@ const getAdminBankInfo = async (req, res) => {
     });
   }
 };
+// 3. [GET] Tất cả gian hàng (đầy đủ thông tin cho Admin)
+const getAllVendorsAdmin = async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Truy cập bị từ chối!" });
+    }
+
+    const vendors = await Vendor.find()
+      .populate(
+        "owner",
+        "name email phone avatar walletBalance isApproved role isActive createdAt",
+      )
+      .sort({ createdAt: -1 });
+
+    const vendorIds = vendors.map((v) => v._id);
+    if (vendorIds.length === 0) return res.status(200).json([]);
+
+    const [menuCounts, orderStats] = await Promise.all([
+      MenuItem.aggregate([
+        { $match: { vendor: { $in: vendorIds } } },
+        {
+          $group: {
+            _id: "$vendor",
+            count: { $sum: 1 },
+            available: {
+              $sum: { $cond: [{ $eq: ["$isAvailable", true] }, 1, 0] },
+            },
+          },
+        },
+      ]),
+      Order.aggregate([
+        { $match: { vendor: { $in: vendorIds }, paymentStatus: "Paid" } },
+        {
+          $group: {
+            _id: "$vendor",
+            orders: { $sum: 1 },
+            revenue: { $sum: "$totalPrice" },
+          },
+        },
+      ]),
+    ]);
+
+    const menuMap = Object.fromEntries(
+      menuCounts.map((m) => [String(m._id), m]),
+    );
+    const orderMap = Object.fromEntries(
+      orderStats.map((o) => [String(o._id), o]),
+    );
+
+    const result = vendors.map((v) => {
+      const id = String(v._id);
+      const normalized = normalizeVendorHours(v);
+      const status = getVendorStatus(normalized);
+      return {
+        ...normalized,
+        isOpen: status.isOpen,
+        statusMessage: status.message,
+        hoursDisplay: formatVendorHoursRange(
+          normalized.openTime,
+          normalized.closeTime,
+        ),
+        menuItemCount: menuMap[id]?.count || 0,
+        menuAvailableCount: menuMap[id]?.available || 0,
+        paidOrderCount: orderMap[id]?.orders || 0,
+        totalRevenue: orderMap[id]?.revenue || 0,
+      };
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi lấy danh sách gian hàng", error: error.message });
+  }
+};
+
+// 8. 🌟 [PUT] ĐÁNH DẤU ĐÃ ĐỌC (1 CÁI HOẶC TẤT CẢ)
+const markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (id === "all") {
+      await Notification.updateMany(
+        {
+          isRead: false,
+          $or: [{ audience: "admin" }, { audience: { $exists: false } }],
+        },
+        { isRead: true },
+      );
+      return res.status(200).json({ message: "Đã đánh dấu đọc tất cả!" });
+    } else {
+      await Notification.findByIdAndUpdate(id, { isRead: true });
+      return res.status(200).json({ message: "Đã đọc thông báo!" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi xử lý thông báo", error: error.message });
+  }
+};
 
 module.exports = {
   getDashboardStats,
