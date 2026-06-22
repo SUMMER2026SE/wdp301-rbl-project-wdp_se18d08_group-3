@@ -15,11 +15,14 @@ const orderSchema = new mongoose.Schema({
     note: { type: String, default: '' }, 
     deliveryType: { type: String, default: 'pickup' }, // Mặc định là đến lấy
     
-    // 🌟 CHỈ CÒN LẠI KHUNG GIỜ NHẬN MÓN
+    // KHUNG GIỜ NHẬN MÓN
     pickupSlot: { 
         type: String, 
         required: [true, 'Vui lòng chọn khung giờ nhận cơm'] 
     }, 
+    
+    // 🌟 THÊM MỚI ĐỂ CHẠY PAYOS: Lưu mã đơn hàng dạng số
+    orderCode: { type: Number },
     
     otpCode: { type: String },
     pickupCodeIssuedAt: { type: Date },
@@ -33,12 +36,13 @@ const orderSchema = new mongoose.Schema({
 
     paymentStatus: { 
         type: String, 
-        enum: ['Unpaid', 'Paid', 'Refunded'], 
+        // 🌟 FIX LỖI TẠI ĐÂY: Đã thêm 'Failed' để Mongoose cho phép lưu trạng thái khi khách hủy đơn PayOS
+        enum: ['Unpaid', 'Paid', 'Refunded', 'Failed'], 
         default: 'Unpaid' 
     },
     paymentMethod: { 
         type: String, 
-        enum: ['wallet', 'vnpay'],
+        enum: ['wallet', 'vnpay', 'payos'], // 🌟 ĐÃ MỞ CỬA CHO PAYOS
         default: 'wallet' 
     },
     transactionId: { type: String }, 
