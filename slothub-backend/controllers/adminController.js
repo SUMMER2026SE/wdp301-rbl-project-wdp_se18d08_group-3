@@ -355,29 +355,135 @@ const getAllVendorsAdmin = async (req, res) => {
       .json({ message: "Lỗi lấy danh sách gian hàng", error: error.message });
   }
 };
-
-// 8. 🌟 [PUT] ĐÁNH DẤU ĐÃ ĐỌC (1 CÁI HOẶC TẤT CẢ)
-const markNotificationAsRead = async (req, res) => {
+// 4. [GET] LẤY DANH SÁCH QUẦY CHỜ DUYỆT
+const getPendingVendors = async (req, res) => {
   try {
-    const { id } = req.params;
+    const vendors = await Vendor.find().populate(
+      "owner",
+      "name email phone avatar isApproved role createdAt",
+    );
 
-    if (id === "all") {
-      await Notification.updateMany(
-        {
-          isRead: false,
-          $or: [{ audience: "admin" }, { audience: { $exists: false } }],
-        },
-        { isRead: true },
-      );
-      return res.status(200).json({ message: "Đã đánh dấu đọc tất cả!" });
-    } else {
-      await Notification.findByIdAndUpdate(id, { isRead: true });
-      return res.status(200).json({ message: "Đã đọc thông báo!" });
-    }
+    const pendingVendors = vendors.filter(
+      (v) =>
+        v.owner &&
+        v.owner.isApproved === false &&
+        v.owner.role === "vendor_owner",
+    );
+
+    const normalized = pendingVendors.map((v) => {
+      const doc = normalizeVendorHours(v);
+      return {
+        ...doc,
+        hoursDisplay: formatVendorHoursRange(doc.openTime, doc.closeTime),
+      };
+    });
+    res.status(200).json(normalized);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Lỗi khi lấy danh sách chờ duyệt",
+      error: error.message,
+    });
+  }
+};
+
+// 4. [PUT] DUYỆT QUẦY (MỞ KHÓA TÀI KHOẢN)
+const approveVendor = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { isApproved: true },
+      { returnDocument: "after" },
+    );
+    if (!user)
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy tài khoản chủ quầy!" });
+
+    await logAudit({
+      actor: req.user.id,
+      actorRole: "admin",
+      action: "VENDOR_APPROVED",
+      entityType: "User",
+      entityId: userId,
+    });
+
+    res.status(200).json({ message: "🎉 Đã duyệt gian hàng thành công!" });
   } catch (error) {
     res
       .status(500)
-      .json({ message: "Lỗi xử lý thông báo", error: error.message });
+      .json({ message: "Lỗi khi duyệt quầy", error: error.message });
+  }
+};
+
+// 5. [DELETE] TỪ CHỐI (XÓA LUÔN YÊU CẦU)
+const rejectVendor = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    await User.findByIdAndDelete(userId);
+    await Vendor.findOneAndDelete({ owner: userId });
+
+    await logAudit({
+      actor: req.user.id,
+      actorRole: "admin",
+      action: "VENDOR_REJECTED",
+      entityType: "User",
+      entityId: userId,
+    });
+
+    res.status(200).json({ message: "🗑️ Đã từ chối và xóa yêu cầu đăng ký!" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi khi từ chối yêu cầu", error: error.message });
+  }
+};
+
+// 6. [PUT] LƯU THÔNG TIN NGÂN HÀNG
+const updateAdminBankInfo = async (req, res) => {
+  try {
+    const { bankName, accountNumber, accountName } = req.body;
+
+    const admin = await User.findById(req.user._id);
+    if (!admin)
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy tài khoản Admin!" });
+
+    admin.bankAccount = { bankName, accountNumber, accountName };
+    await admin.save();
+
+    res.status(200).json({ message: "Lưu cấu hình Ngân hàng thành công!" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi khi cập nhật ngân hàng", error: error.message });
+  }
+};
+
+// 7. 🌟 [GET] LẤY DANH SÁCH THÔNG BÁO CHO ADMIN
+const getAdminNotifications = async (req, res) => {
+  try {
+    // Lấy 50 thông báo mới nhất xếp lên đầu
+    const adminFilter = {
+      $or: [{ audience: "admin" }, { audience: { $exists: false } }],
+    };
+    const notifications = await Notification.find(adminFilter)
+      .sort({ createdAt: -1 })
+      .limit(50);
+    const unreadCount = await Notification.countDocuments({
+      ...adminFilter,
+      isRead: false,
+    });
+
+    res.status(200).json({ notifications, unreadCount });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi khi lấy thông báo", error: error.message });
   }
 };
 
