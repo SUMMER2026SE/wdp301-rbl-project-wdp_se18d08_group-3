@@ -487,6 +487,31 @@ const getAdminNotifications = async (req, res) => {
   }
 };
 
+// 8. 🌟 [PUT] ĐÁNH DẤU ĐÃ ĐỌC (1 CÁI HOẶC TẤT CẢ)
+const markNotificationAsRead = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (id === "all") {
+      await Notification.updateMany(
+        {
+          isRead: false,
+          $or: [{ audience: "admin" }, { audience: { $exists: false } }],
+        },
+        { isRead: true },
+      );
+      return res.status(200).json({ message: "Đã đánh dấu đọc tất cả!" });
+    } else {
+      await Notification.findByIdAndUpdate(id, { isRead: true });
+      return res.status(200).json({ message: "Đã đọc thông báo!" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Lỗi xử lý thông báo", error: error.message });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getCashFlowChart,
