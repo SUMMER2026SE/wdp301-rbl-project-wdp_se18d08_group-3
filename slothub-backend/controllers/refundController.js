@@ -63,4 +63,21 @@ const requestRefund = async (req, res) => {
   }
 };
 
+// 2. Lấy lịch sử hoàn tiền (Giữ nguyên của bạn)
+const getRefundHistory = async (req, res) => {
+  try {
+    if (req.user.role !== "admin")
+      return res.status(403).json({ message: "Quyền hạn không đủ!" });
+
+    const history = await Transaction.find({ type: "REFUND" })
+      .populate("userId", "name email walletBalance")
+      .populate("vendorId", "name")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json(history);
+  } catch (error) {
+    res.status(500).json({ message: "Lỗi lấy lịch sử", error: error.message });
+  }
+};
+
 module.exports = { requestRefund, getRefundHistory };
