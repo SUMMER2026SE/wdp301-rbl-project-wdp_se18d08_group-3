@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { LocaleProvider } from './context/LocaleContext';
+import { AppAlertProvider } from './context/AppAlertProvider';
 import { GoogleOAuthProvider } from '@react-oauth/google'; 
 import './App.css'; 
 import './index.css'; 
@@ -16,6 +17,7 @@ import FoodDetail from './pages/FoodDetail';
 import PaymentResult from './pages/PaymentResult'; 
 import Profile from './pages/Profile';
 import StudentMessages from './pages/StudentMessages';
+import Forum from './pages/Forum';
 import ChatWidget from './components/ChatWidget';
 
 // Dành cho Admin & Vendor
@@ -76,6 +78,7 @@ function App() {
     <GoogleOAuthProvider clientId="483860874151-m5oqomh1pca4v1is782d602827egm321.apps.googleusercontent.com">
       <AuthProvider>
         <LocaleProvider>
+        <AppAlertProvider>
         <Router>
           <div className="App font-sans bg-[#F9FAFB] min-h-screen relative">
             <Routes>
@@ -90,6 +93,7 @@ function App() {
               <Route path="/payment-result" element={<PaymentResult />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/messages" element={<StudentMessages />} />
+              <Route path="/forum" element={<Forum />} />
               
               {/* 🌟 ROUTE DÀNH CHO NGƯỜI BÁN (VENDOR) */}
               <Route path="/vendor/*" element={<VendorPage />} />
@@ -113,6 +117,7 @@ function App() {
             
           </div>
         </Router>
+        </AppAlertProvider>
         </LocaleProvider>
       </AuthProvider>
     </GoogleOAuthProvider>
