@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import api from '../api/axios';
 import { AuthContext } from '../context/AuthContext';
-import { ShoppingCart, Search, Trash2, Utensils, LogOut, ChevronDown, Wallet, Store, X, Minus, Plus, Receipt, UserCircle, Star, MessageSquare } from 'lucide-react';
+import { ShoppingCart, Search, Trash2, Utensils, LogOut, ChevronDown, Wallet, Store, X, Minus, Plus, Receipt, UserCircle, Star, MessageSquare, Trophy } from 'lucide-react';
 import BrandLogo from '../components/BrandLogo'; 
 import WalletWidget from '../components/WalletWidget';
 import Footer from '../components/Footer';
@@ -241,24 +241,14 @@ const Home = () => {
         ).length
       : 0;
 
-  // HÀM MỚI: Kiểm tra giỏ hàng trước khi sang Checkout
   const handleProceedToCheckout = () => {
     if (!user) {
       alert(t('home.loginToOrder'));
       return navigate('/login');
     }
-
-    if (cart.items && cart.items.length > 0) {
-      const firstVendorId = cart.items[0].menuItem?.vendor?._id || cart.items[0].menuItem?.vendor;
-      const hasMultipleVendors = cart.items.some(i => {
-        const vId = i.menuItem?.vendor?._id || i.menuItem?.vendor;
-        return String(vId) !== String(firstVendorId);
-      });
-
-      if (hasMultipleVendors) {
-        alert("⛔ LỖI: Giỏ hàng đang chứa món của nhiều quầy khác nhau. Vui lòng xóa bớt để chỉ giữ lại món của 1 quầy!");
-        return; 
-      }
+    if (!cart.items?.length) {
+      alert(t('home.cartEmptyLong'));
+      return;
     }
     navigate('/checkout');
   };
@@ -355,6 +345,9 @@ const Home = () => {
                     </button>
                     <button onClick={() => { navigate('/messages'); setShowUserMenu(false); }} className="w-full flex items-center gap-3 px-5 py-3 text-sm font-bold text-gray-600 hover:bg-orange-50 hover:text-[#F27124] rounded-xl transition-colors">
                       <MessageSquare size={18} /> {t('nav.messages')}
+                    </button>
+                    <button onClick={() => { navigate('/forum'); setShowUserMenu(false); }} className="w-full flex items-center gap-3 px-5 py-3 text-sm font-bold text-gray-600 hover:bg-orange-50 hover:text-[#F27124] rounded-xl transition-colors">
+                      <Trophy size={18} /> {t('nav.forum')}
                     </button>
                     <button onClick={logout} className="w-full flex items-center gap-3 px-5 py-3 text-sm font-bold text-red-500 hover:bg-red-50 rounded-xl transition-colors mt-2">
                       <LogOut size={18} /> {t('nav.logout')}
@@ -636,10 +629,10 @@ const Home = () => {
               )}
               <button 
                   onClick={handleProceedToCheckout} 
-                  disabled={user && ((!cart.items || cart.items.length === 0) || cart.vendorOpen === false)} 
+                  disabled={user && (!cart.items || cart.items.length === 0)} 
                   className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-4 rounded-2xl font-black text-lg shadow-xl shadow-gray-900/20 hover:bg-black hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:shadow-none disabled:hover:translate-y-0 disabled:cursor-not-allowed group"
               >
-                {user ? (cart.vendorOpen === false ? t('home.stallClosedBtn') : t('home.proceedOrder')) : t('home.loginToOrderBtn')}
+                {user ? t('home.proceedOrder') : t('home.loginToOrderBtn')}
               </button>
             </div>
           </div>
@@ -659,7 +652,7 @@ const Home = () => {
           <button
             type="button"
             onClick={handleProceedToCheckout}
-            disabled={user && ((!cart.items?.length) || cart.vendorOpen === false)}
+            disabled={user && !cart.items?.length}
             className="shrink-0 bg-gray-900 text-white px-5 py-3 rounded-xl font-black text-sm disabled:opacity-50"
           >
             {t('home.checkout')}

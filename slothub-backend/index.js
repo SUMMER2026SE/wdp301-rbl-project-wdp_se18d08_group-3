@@ -70,6 +70,8 @@ const refundRoutes = require('./routes/refundRoutes');
 const cartRoutes = require('./routes/cartRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const messageRoutes = require('./routes/messageRoutes');
+const ttsRoutes = require('./routes/ttsRoutes');
+const forumRoutes = require('./routes/forumRoutes');
 // --- MOUNT ROUTES ---
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -95,6 +97,8 @@ app.use('/api/refunds', refundRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/tts', ttsRoutes);
+app.use('/api/forum', forumRoutes);
 // ==========================================
 // 4. CHẠY SERVER
 // ==========================================

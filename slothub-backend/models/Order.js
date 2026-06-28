@@ -11,6 +11,9 @@ const orderSchema = new mongoose.Schema({
     }],
 
     totalPrice: { type: Number, required: true }, 
+    discountAmount: { type: Number, default: 0 },
+    voucherCode: { type: String, default: '' },
+    voucherId: { type: mongoose.Schema.Types.ObjectId, ref: 'VendorVoucher', default: null },
     
     note: { type: String, default: '' }, 
     deliveryType: { type: String, default: 'pickup' }, // Mặc định là đến lấy
@@ -19,10 +22,21 @@ const orderSchema = new mongoose.Schema({
     pickupSlot: { 
         type: String, 
         required: [true, 'Vui lòng chọn khung giờ nhận cơm'] 
-    }, 
+    },
+    pickupSlotId: { type: mongoose.Schema.Types.ObjectId, ref: 'TimeSlot', default: null },
+    pickupSlotStartAt: { type: Date, default: null },
+
+    cancelledBy: { type: String, enum: ['student', 'vendor', 'admin', 'system', ''], default: '' },
+    cancelledAt: { type: Date, default: null },
+    cancelReason: { type: String, default: '' },
+    refundPercent: { type: Number, default: 0, min: 0, max: 100 },
+    refundAmount: { type: Number, default: 0, min: 0 },
     
     // 🌟 THÊM MỚI ĐỂ CHẠY PAYOS: Lưu mã đơn hàng dạng số
     orderCode: { type: Number },
+
+    // Nhóm nhiều đơn (nhiều quầy) thanh toán cùng lúc
+    checkoutBatchId: { type: String, index: true },
     
     otpCode: { type: String },
     pickupCodeIssuedAt: { type: Date },
@@ -37,7 +51,7 @@ const orderSchema = new mongoose.Schema({
     paymentStatus: { 
         type: String, 
         // 🌟 FIX LỖI TẠI ĐÂY: Đã thêm 'Failed' để Mongoose cho phép lưu trạng thái khi khách hủy đơn PayOS
-        enum: ['Unpaid', 'Paid', 'Refunded', 'Failed'], 
+        enum: ['Unpaid', 'Paid', 'Refunded', 'PartialRefunded', 'Failed'], 
         default: 'Unpaid' 
     },
     paymentMethod: { 
